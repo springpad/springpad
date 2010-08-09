@@ -1,4 +1,5 @@
 Welcome to the springpad github. Here you can find the various open source projects published by Spring Partners (http://springpadit.com/developers/).
 
 Python Springpad API
-This is our python client for the springpad api (http://springpadit.com/developers/docs/api).
+This is our python client for the Springpad REST API (http://springpadit.com/developers/docs/api).
+http://github.com/springpad/springpad/blob/master/python/springpad.py
