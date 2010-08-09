@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+#############################################################
+# Python utility for aggregating data on the command line.
+# Basically "cut" via regex with optional aggregation.
+#
+# Example (cut sourceClient, type and uuid, group on client and type and count unique uuids):
+# agg -f " uuid:([\w-]+)" -f "sourceClient:(\w+)" -f "(?:type):([\w]+)" -g 1 -g 2 -c 0
+#
+
+import os,sys,re
+from optparse import OptionParser
+
+def main():
+    parser = OptionParser()
+    parser.add_option("-f", "--field", action="append", type="string", dest="field", help="Regex field to extract", metavar="REGEX")
+    parser.add_option("-d", "--delim", type="string", dest="delim", help="Delimiter", metavar="STR", default="|")
+    parser.add_option("-g", "--group", action="append", type="int", dest="group", help="Group", metavar="NUM")
+    parser.add_option("-c", "--count", type="int", dest="count", help="Count", metavar="NUM")
+
+    (options, args) = parser.parse_args(sys.argv[1:])
+
+    if not options.field:
+        parser.error("-f is a required field")
+
+    regexes = []
+    for field in options.field:
+        regexes.append(re.compile(field))
+
+    groups = {}
+
+    for line in sys.stdin:
+        extracted = []
+        for regex in regexes:
+            match = regex.search(line)
+            if match:
+                extracted.append(match.group(1))
+        if len(extracted) == len(regexes):
+            if options.group:
+                groupedKey = []
+                for group in options.group:
+                    groupedKey.append(extracted[group])
+                groupedKeyStr = "|".join(groupedKey)
+                existing = groups.get(groupedKeyStr)
+                if not existing:
+                    existing = set()
+                    groups[groupedKeyStr] = existing
+                existing.add(extracted[options.count])
+            else:
+                print options.delim.join(extracted)
+
+    if groups:
+        sorted_keys = groups.keys()
+        sorted_keys.sort()
+        for key in sorted_keys:
+            print "%s %s" % (key, len(groups[key]))
+
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
