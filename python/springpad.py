@@ -726,7 +726,6 @@ def main():
                     user = service.get_user('me')
                     user_uuid = parse_uuid(user['uuid'])
                     service.set_user_context(user['username'], user_uuid)
-                    config.add_section('access')
                     config.set('access', 'token', "%s" % access_token)
                     config.set('access', 'username', user['username'])                    
                     config.set('access', 'uuid', user_uuid)
