@@ -1,0 +1,11 @@
+*.pyc
+.*~
+*.*~
+*.pid
+tmp
+.DS_Store
+_trial_temp*
+TAGS
+workspace.xml
+dump.rdb
+.idea/*
