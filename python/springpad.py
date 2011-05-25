@@ -34,7 +34,8 @@ CONSUMER_TOKEN = None
 CONSUMER_PRIVATE = None
 
 class Block:
-    def __init__(self, blockMap={}):
+    def __init__(self, blockMap=None):
+        blockMap = blockMap or {}
         self.update_block(blockMap)
                 
     def update_block(self, blockMap):
@@ -212,13 +213,13 @@ class SimpleBlockStore(object):
             
         block = None
 
-        if uuid != None:
+        if uuid is not None:
             uuid = parse_uuid(uuid)
             block = self.get_block(uuid)
                 
-        if (block == None): 
+        if block is None:
             block = Block(dict_repr)
-            if SpringRpcService().user_uuid == block.creator or (block.creator == None and block.uuid != None):
+            if SpringRpcService().user_uuid == block.creator or (block.creator is None and block.uuid is not None):
                 self.add_block(block)
         else:
             block.update_block(dict_repr)
@@ -260,9 +261,10 @@ class SimpleFetcher:
         self._user = None
         self._password = None
 
-    def fetch(self, url, parameters=None, post_data=None, headers={}, method='GET'):
+    def fetch(self, url, parameters=None, post_data=None, headers=None, method='GET'):
+        headers = headers or {}
         if parameters:
-            parameters = dict([(k, parameters[k]) for k in filter(lambda x: parameters[x] != None, parameters)])
+            parameters = dict([(k, parameters[k]) for k in filter(lambda x: parameters[x] is not None, parameters)])
             paramStr = urllib.urlencode(parameters)
             url = "%s?%s" % (url, paramStr)
 
@@ -302,15 +304,15 @@ class SimpleFetcher:
 class OAuthFetcher:
     """ OAuth based on oauth implementation at: http://code.google.com/p/oauth-python-twitter/source/browse/trunk/oauthtwitter.py """
 
-    def __init__(self, consumer_key, consumer_secret, access_token=None, default_headers={}):
+    def __init__(self, consumer_key, consumer_secret, access_token=None, default_headers=None):
         self.http = httplib2.Http()
         self._consumer = oauth.OAuthConsumer(consumer_key, consumer_secret)
         self._signature_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
         self._access_token = access_token
         self._default_params = {}
-        self._default_headers = default_headers
+        self._default_headers = default_headers or {}
 
-    def _FetchUrl(self, url, post_data=None, parameters=None, hdrs={}, no_cache=False, http_method=None):
+    def _FetchUrl(self, url, post_data=None, parameters=None, hdrs=None, no_cache=False, http_method=None):
         '''Fetch a URL, optionally caching for a specified time.
 
         Args:
@@ -332,9 +334,9 @@ class OAuthFetcher:
         if parameters:
             extra_params.update(parameters)
 
-        if http_method == None and post_data:
+        if http_method is None and post_data:
             http_method = "POST"
-        elif http_method == None:
+        elif http_method is None:
             http_method = "GET"
 
         req = self._makeOAuthRequest(url, parameters=extra_params, http_method=http_method)
@@ -344,7 +346,8 @@ class OAuthFetcher:
         # print url
 
         headers = {}
-        headers.update(hdrs)
+        if hdrs:
+            headers.update(hdrs)
         headers.update(self._default_headers)
         
         # Open and return the URL immediately
@@ -424,9 +427,10 @@ class OAuthFetcher:
         self._access_token = token
         return token
 
-    def fetch(self, url, parameters=None, headers={}, post_data=None, method='GET'):
+    def fetch(self, url, parameters=None, headers=None, post_data=None, method='GET'):
+        headers = headers or {}
         if parameters:
-            parameters = dict([(k, parameters[k]) for k in filter(lambda x: parameters[x] != None, parameters)])
+            parameters = dict([(k, parameters[k]) for k in filter(lambda x: parameters[x] is not None, parameters)])
             paramStr = urllib.urlencode(parameters)
             url = "%s?%s" % (url, paramStr)
 
@@ -482,13 +486,13 @@ class SpringRpcService:
         return self._process_response(self.fetcher.fetch("users/me/blocks/%s" % uuid), resp_format)
 
     def get_blocks(self, type_filter=None, sort='created', order='desc', filter_string=None, limit=10, start=0, \
-                       format='full', resp_format=ResponseFormat.Blocks, parameters={}):
+                       format='full', resp_format=ResponseFormat.Blocks, parameters=None):
         """returns some blocks"""
-        
         params = {'sort':sort, 'order':order, 'limit':limit, 'start':start, 'format':format}
-        params.update(parameters)
-        if type_filter != None: params['type'] = type_filter
-        if filter_string != None: params['filter'] = filter_string
+        if parameters:
+            params.update(parameters)
+        if type_filter is not None: params['type'] = type_filter
+        if filter_string is not None: params['filter'] = filter_string
         
         results = self.fetcher.fetch("users/me/blocks", parameters=params)
 
@@ -508,12 +512,15 @@ class SpringRpcService:
     def get_more_actions(self, uuid):
         return self._process_response(self.fetcher.fetch("blocks/%s/more-actions" % uuid), ResponseFormat.Json)
 
-    def fetch(self, path, params={}, headers={}, resp_format=ResponseFormat.RawHtml):
+    def fetch(self, path, params=None, headers=None, resp_format=ResponseFormat.RawHtml):
         """fetches the url requested"""
+        params = params or {}
+        headers = headers or {}
         return self._process_response(self.fetcher.fetch(path, parameters=params, headers=headers), resp_format)
 
-    def post(self, path, data, params={}, resp_format=ResponseFormat.RawHtml):
+    def post(self, path, data, params=None, resp_format=ResponseFormat.RawHtml):
         """posts the data and returns the response"""
+        params = params or {}
         return self._process_response(self.fetcher.fetch(path, parameters=params, post_data=json.dumps(data), method='POST'), resp_format)
 
     def follow_user(self, userId):
@@ -533,7 +540,7 @@ class SpringRpcService:
         params = {'limit':limit, 'text':text}
         
         if isinstance(location, str):
-            if text == None: 
+            if text is None:
                 params['text'] = location
             else:
                 params['text'] = text + ' ' + location
@@ -541,7 +548,7 @@ class SpringRpcService:
             params['lat'] = locations['lat']
             params['lng'] = locations['lng']
         
-        if type_filter == None:
+        if type_filter is None:
             return self._process_response(self.fetcher.fetch("/blocks/all", parameters=params), resp_format)
         else:
             return self._process_response(self.fetcher.fetch("/blocks/types/%s/all" % type_filter, \
@@ -733,24 +740,14 @@ def main():
     if options.register:
         if len(args) != 2:
             print "USAGE: ./springpad.py --register [consumer-key] [consumer-secret]"
-            exit(0)
-            
+            sys.exit(0)
+
         config.add_section('access')
         config.set('access', 'key', args[0])
         config.set('access', 'secret', args[1])                    
         with open(os.path.expanduser('~/.springpad'), 'w') as fh:
             config.write(fh)
-            exit(0)
-
-        if config.has_option('access', 'key') == False:
-            print "You need to register for a developer token then set the variables in springpad.py" \
-                   "you can use this library.\nhttp://springpadit.com/api/oauth-register-app\n" \
-                   "When you get the key set it by calling 'python springpad.py --register [consumer key] [consumer secret]'"
-            exit(0)
-                
-
-        consumer_key = config.get('access', 'key')
-        consumer_secret = config.get('access', 'secret')
+            sys.exit(0)
 
     if options.username:
             service = SpringRpcService()
@@ -773,12 +770,12 @@ def main():
             service.fetcher = OAuthFetcher(consumer_key, consumer_secret, access_token=token)
 
             # if we haven't authenticated yet do that
-            if token == None:
+            if token is None:
                 request_token= service.fetcher.get_request_token()
                 print "Please go to the following URL and click the authorize button:\n\n%s?%s\n"  % (AUTHORIZATION_URL, request_token)
                 raw_input('<<<press enter after you hit the authorize button on the webpage>>>')
                 access_token = service.fetcher.get_access_token()
-                if access_token != None:
+                if access_token is not None:
                     user = service.get_user('me')
                     user_uuid = parse_uuid(user['uuid'])
                     service.set_user_context(user['username'], user_uuid)
@@ -791,7 +788,7 @@ def main():
                     print "You will by authorized for that account from now on."
                 else:
                     print "Failed to authenticate your account."
-                    exit(0)
+                    sys.exit(0)
             else:
                 service.set_user_context(config.get('access', 'username'), config.get('access', 'uuid'))
 
@@ -826,7 +823,7 @@ def main():
                 response = service.get_block(option, resp_format=ResponseFormat.RawHtml)
             else:
                 print "need to provide a uuid"
-                exit(0)
+                sys.exit(0)
 
             if options.field:
                 # fields support bean style access
