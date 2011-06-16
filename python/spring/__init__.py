@@ -1,11 +1,32 @@
 # encoding: utf-8
 """
-block.py
 
 Created by Pete Aykroyd on 2010-06-21.
 Copyright (c) 2010 Spring Partners. All rights reserved.
 
-Visit http://springpadit.com/api/oauth-register-app to get your develope tokens
+Visit http://springpadit.com/api/oauth-register-app to get your developer tokens
+
+PRE-REQUISITES: 
+  ensure that you easy_install httplib2, json
+  and also install: http://pypi.python.org/pypi/oauth/1.0.1 
+
+EXAMPLE:
+  # without a token
+  import spring
+  c = spring.Client(consumer_key, consumer_secret, None)
+  req_token = c.get_request_token()
+  # direct user to authorize page
+  # ...
+  # when this is done:
+  acc_token = c.get_access_token(req_token)
+  c.get_user('me')
+
+  # with a token
+  import spring
+  from oauth import oauth
+  tkn = oauth.OAuthToken.from_string(access_token_string_repr)
+  c = spring.Client(consumer_key, consumer_secret, tkn)
+  c.get_user('aykroyd')
 """
 
 import urllib, httplib2, uuid, time, calendar, json, sys
