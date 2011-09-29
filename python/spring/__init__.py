@@ -55,9 +55,14 @@ class Client:
     if (not consumer_key and not consumer_secret) and (not username and not password):
       raise ValueError('Must provide either consumer_key and secret or username and password.')
 
-    self.consumer = oauth.OAuthConsumer(consumer_key, consumer_secret)
-    self.access_token = access_token
-    self.sig_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
+    if consumer_key and consumer_secret:
+      self.consumer = oauth.OAuthConsumer(consumer_key, consumer_secret)
+      self.access_token = access_token
+      self.sig_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
+    else:
+      self.consumer = None
+      self.access_token = None
+      self.sig_method = None
     self.client_name = client_name
     self._user_uuid = None
     self.username=username
@@ -201,6 +206,8 @@ class Client:
 
       request.sign_request(self.sig_method, self.consumer, token)
       url = request.to_url()
+    else:
+      headers.update({'X-Spring-Username': self.username, 'X-Spring-Password': self.password})
 
     resp, data = httplib2.Http().request(url, method=method, body=post_data, headers=headers) 
 

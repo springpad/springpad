@@ -30,6 +30,9 @@ def main():
     Authenticate by running this and then follow the instructions on the screen:
     ./cli.py auth
 
+    Alternatively, you can use simple username/password authentication like this example:
+    ./cli.py --username myUserName --password 123456789 user me
+
     Then run queries like:
 
     ./cli.py user me
@@ -48,6 +51,8 @@ def main():
   parser.add_option("-i", "--uuid", type="string", metavar="UUID", help="specifies a uuid for other calls")
   parser.add_option("-l", "--limit", dest="limit", default=5, help="limits the number of results returned by the query")
   parser.add_option("-s", "--start", dest="start", default=0, help="start results with the nth matching result")
+  parser.add_option("-u", "--username", type="string", metavar="username", help="username for simple authentication")
+  parser.add_option("-p", "--password", type="string", metavar="password", help="password for simple authentication")
 
   (options, args) = parser.parse_args(sys.argv[1:])
 
@@ -57,23 +62,28 @@ def main():
   
   command = args[0]
 
-  config = ConfigParser.ConfigParser()
-  config.read([os.path.expanduser('~/.springpad')])
-  # get consumer key and secret
-  if config.has_section('access'):
-    consumer_key = config.get('access', 'key')
-    consumer_secret = config.get('access', 'secret')
-  else:
+  if options.username and options.password:
     consumer_key = None
     consumer_secret = None
-
-  if config.has_option('access', 'token'):
-    token = oauth.OAuthToken.from_string(config.get('access', 'token'))
-  else:
     token = None
+  else:
+    config = ConfigParser.ConfigParser()
+    config.read([os.path.expanduser('~/.springpad')])
+    # get consumer key and secret
+    if config.has_section('access'):
+      consumer_key = config.get('access', 'key')
+      consumer_secret = config.get('access', 'secret')
+    else:
+      consumer_key = None
+      consumer_secret = None
+
+    if config.has_option('access', 'token'):
+      token = oauth.OAuthToken.from_string(config.get('access', 'token'))
+    else:
+      token = None
 
   if command != 'register':
-    service = Client(consumer_key, consumer_secret, access_token=token)
+    service = Client(consumer_key, consumer_secret, access_token=token, username=options.username, password=options.password)
   else:
     service = None
 
