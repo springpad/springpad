@@ -72,7 +72,10 @@ def main():
   else:
     token = None
 
-  service = Client(consumer_key, consumer_secret, access_token=token)
+  if command != 'register':
+    service = Client(consumer_key, consumer_secret, access_token=token)
+  else:
+    service = None
 
   if command == 'register':
     if len(args) != 3:

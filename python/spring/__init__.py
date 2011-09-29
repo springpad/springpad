@@ -45,16 +45,29 @@ class Client:
   """Provides access to Springpad's API functions."""
   
   def __init__(self, 
-               consumer_key,
-               consumer_secret,
+               consumer_key=None,
+               consumer_secret=None,
                access_token=None,
+               username=None,
+               password=None,
                default_headers=None,
                client_name='Python'):
+    if (not consumer_key and not consumer_secret) and (not username and not password):
+      raise ValueError('Must provide either consumer_key and secret or username and password.')
+
     self.consumer = oauth.OAuthConsumer(consumer_key, consumer_secret)
     self.access_token = access_token
     self.sig_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
     self.client_name = client_name
     self._user_uuid = None
+    self.username=username
+    self.password=password
+
+  def using_oauth(self):
+    return self.consumer
+
+  def using_simple_auth(self):
+    return self.username and self.password
 
   def get_request_token(self):
     """Starts the oauth auth process by getting a request token from Springpad.
@@ -114,7 +127,7 @@ class Client:
 
   def follow_user(self, userId):
     """ follows the requested user """
-    return self._fetch("/users/me/follow/%s" % userId, method='POST') != None
+    return self._fetch("users/me/follow/%s" % userId, method='POST') != None
 
   def find_new_blocks(self, type_filter=None, text=None, location=None, limit=10):
     """
@@ -138,18 +151,18 @@ class Client:
       params['lng'] = locations['lng']
     
     if type_filter is None:
-      return self._fetch("/blocks/all", parameters=params)
+      return self._fetch("blocks/all", parameters=params)
     else:
-      return self._fetch("/blocks/types/%s/all" % type_filter, parameters=params)
+      return self._fetch("blocks/types/%s/all" % type_filter, parameters=params)
 
   def attach_file(self, uuid, bytes, filename=None, description=None):
-    data = self._fetch("/users/me/blocks/%s/files" % uuid, post_data=bytes, \
+    data = self._fetch("users/me/blocks/%s/files" % uuid, post_data=bytes, \
                    parameters = {'filename':filename, 'description':description},
                    method='POST')
     return True
 
   def attach_photo(self, uuid, bytes, filename=None, description=None):
-    data = self._fetch("/users/me/blocks/%s/photos" % uuid, post_data=bytes, \
+    data = self._fetch("users/me/blocks/%s/photos" % uuid, post_data=bytes, \
                    parameters = {'filename':filename, 'description':description},
                    method='POST')
     return True
@@ -182,11 +195,13 @@ class Client:
     # add required headers
     headers.update({'X-Spring-Client': self.client_name, 'Content-Type': 'application/json; charset=UTF-8'})
 
-    request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=token, http_url=url,
-                                                         http_method=method, parameters=parameters)
+    if self.using_oauth():
+      request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=token, http_url=url,
+                                                           http_method=method, parameters=parameters)
 
-    request.sign_request(self.sig_method, self.consumer, token)
-    url = request.to_url()
+      request.sign_request(self.sig_method, self.consumer, token)
+      url = request.to_url()
+
     resp, data = httplib2.Http().request(url, method=method, body=post_data, headers=headers) 
 
     if resp.status == 403:
