@@ -24,7 +24,7 @@ def main():
     
     Examples:
 
-    Start by registring your OAuth keys (visit http://springpadit.com/developers for more information)
+    Start by registring your OAuth keys (visit http://springpad.com/developers for more information)
     ./cli.py register 343413412343 3413412kk1344
 
     Authenticate by running this and then follow the instructions on the screen:

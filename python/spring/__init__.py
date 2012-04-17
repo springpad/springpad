@@ -4,7 +4,7 @@
 Created by Pete Aykroyd on 2010-06-21.
 Copyright (c) 2010 Spring Partners. All rights reserved.
 
-Visit http://springpadit.com/api/oauth-register-app to get your developer tokens
+Visit http://springpad.com/api/oauth-register-app to get your developer tokens
 
 PRE-REQUISITES: 
   ensure that you easy_install httplib2, json
@@ -35,7 +35,7 @@ import json
 from datetime import datetime
 from time import mktime
 
-BASE_API_URL = 'http://springpadit.com/api/'
+BASE_API_URL = 'http://springpad.com/api/'
 
 class SecurityError(BaseException):
   pass
@@ -78,7 +78,7 @@ class Client:
     """Starts the oauth auth process by getting a request token from Springpad.
         
        You can get the URL to direct the user do:
-             "http://springpadit.com/api/oauth-authorize%?s" % request_token
+             "http://springpad.com/api/oauth-authorize%?s" % request_token
 
        After the user approves access at the given url, your application's callback
        url will be requested by Springpad with the request token as a query parameter.
