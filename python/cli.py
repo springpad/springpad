@@ -21,7 +21,7 @@ def main():
     delete [uuid1, uuid2, ...]                    Deletes blocks
     execute [command]                             Takes a JSON commands string and executes it
     attach [path]                                 Attaches a file to a block. Use with --uuid to specify the block
-    
+    path [api path]                               Prints the result of a call to an api url (e.g., users/me)
     Examples:
 
     Start by registring your OAuth keys (visit http://springpad.com/developers for more information)
@@ -40,6 +40,7 @@ def main():
     ./cli.py -l 1 -s 3 --type=Task search
     ./cli.py execute "[['set', '/UUID(4234d039-1bad-cef3-a8de-88bab513cdd8)/', 'name', 'Make a cool integration with springpad!']]"
     ./cli.py get 4234d039-1bad-cef3-a8de-88bab513cdd8
+    ./cli.py path users/me  # returns the result from the URL http://springpad.com/api/users/me
     
     """
 
@@ -187,7 +188,7 @@ def main():
 
   elif command == 'path':
     if len(args) == 1:
-      print "USAGE ./cli.py path /path/to/api/method?with=query_strings"
+      print "USAGE ./cli.py path 'users/me/feed/counts'"
     else:
       path = args[1]
       print service._fetch(path)
