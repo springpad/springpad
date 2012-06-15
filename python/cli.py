@@ -185,6 +185,14 @@ def main():
         else:
           service.attach_file(uuid, bytes, filename=path[path.rfind("/"):])
 
+  elif command == 'path':
+    if len(args) == 1:
+      print "USAGE ./cli.py path /path/to/api/method?with=query_strings"
+    else:
+      path = args[1]
+      print service._fetch(path)
+
+
   else:
     parser.print_help()
 
