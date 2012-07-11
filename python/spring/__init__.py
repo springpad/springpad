@@ -29,13 +29,12 @@ EXAMPLE:
   c.get_user('aykroyd')
 """
 
-import urllib, httplib2, uuid, time, calendar, json, sys
+import  httplib2, uuid, json
 import oauth.oauth as oauth
-import json
 from datetime import datetime
 from time import mktime
 
-BASE_API_URL = 'http://springpad.com/api/'
+BASE_API_URL = 'http://springpadit.com/api/'
 
 class SecurityError(BaseException):
   pass
@@ -161,14 +160,22 @@ class Client:
       return self._fetch("blocks/types/%s/all" % type_filter, parameters=params)
 
   def attach_file(self, uuid, bytes, filename=None, description=None):
-    data = self._fetch("users/me/blocks/%s/files" % uuid, post_data=bytes, \
-                   parameters = {'filename':filename, 'description':description},
+    import base64
+    encoded = base64.b64encode(bytes)
+
+    # the ',%s' % encoded bit is a hack to work-around a bug in springpad as of July 11, 2012.
+    # should be fixed by next week
+    data = self._fetch("users/me/blocks/%s/files" % uuid, post_data=',%s' % encoded, \
+                   parameters = {'filename':filename, 'description':description, 'encoding': 'base64'},
                    method='POST')
     return True
 
-  def attach_photo(self, uuid, bytes, filename=None, description=None):
-    data = self._fetch("users/me/blocks/%s/photos" % uuid, post_data=bytes, \
-                   parameters = {'filename':filename, 'description':description},
+  def attach_photo(self, uuid, bytes, type='png', filename=None, description=None):
+    import base64
+    encoded = base64.b64encode(bytes)
+
+    data = self._fetch("users/me/blocks/%s/photos" % uuid, post_data='data:image/%s;base64,%s' % (type,encoded), \
+                   parameters = {'filename':filename, 'description':description, 'encoding': 'base64'},
                    method='POST')
     return True
       
@@ -206,6 +213,7 @@ class Client:
 
       request.sign_request(self.sig_method, self.consumer, token)
       url = request.to_url()
+#      print url
     else:
       headers.update({'X-Spring-Username': self.username, 'X-Spring-Password': self.password})
 
