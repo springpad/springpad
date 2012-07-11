@@ -34,7 +34,7 @@ import oauth.oauth as oauth
 from datetime import datetime
 from time import mktime
 
-BASE_API_URL = 'http://springpadit.com/api/'
+BASE_API_URL = 'http://springpad.com/api/'
 
 class SecurityError(BaseException):
   pass
