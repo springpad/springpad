@@ -181,10 +181,12 @@ def main():
       with open(path, "rb") as fh:
         import re
         bytes = fh.read()
-        if re.match(".*\.(jpg|jpeg)$", path):
-          service.attach_photo(uuid, bytes, filename=path[path.rfind("/"):])
+        filename = path
+        if '/' in path: filename = path[path.rfind('/') + 1:]
+        if re.match(".*\.(jpg|jpeg|png|gif)$", path):
+          service.attach_photo(uuid, bytes, filename=filename)
         else:
-          service.attach_file(uuid, bytes, filename=path[path.rfind("/"):])
+          service.attach_file(uuid, bytes, filename=filename)
 
   elif command == 'path':
     if len(args) == 1:
